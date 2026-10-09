@@ -17,9 +17,6 @@ from types import ModuleType
 
 import pygame
 
-# =============================================================
-# Config
-# =============================================================
 WIDTH, HEIGHT = 900, 600
 FPS = 60
 
@@ -44,9 +41,9 @@ GAMES_DIR = os.path.join(APPS_DIR, "games")
 
 @dataclass(frozen=True)
 class App:
-    key: str          # filename / lookup key
-    label: str         # shown on the tile
-    icon: str          # single glyph shown in the icon circle
+    key: str
+    label: str
+    icon: str
 
 
 APP_LIST: list[App] = [
@@ -59,11 +56,7 @@ APP_LIST: list[App] = [
 ]
 
 
-# =============================================================
-# App discovery / launching
-# =============================================================
 def find_app_file(key: str) -> str | None:
-    """Look for `<key>.py` in the apps dir, then the games dir."""
     for folder in (APPS_DIR, GAMES_DIR):
         candidate = os.path.join(folder, key + ".py")
         if os.path.isfile(candidate):
@@ -81,11 +74,6 @@ def load_app_module(path: str) -> ModuleType:
 
 
 def launch(key: str) -> str | None:
-    """
-    Launch the app for `key`. Returns an error message string on
-    failure, or None on success, so the caller can show it without
-    crashing the whole launcher.
-    """
     path = find_app_file(key)
     if path is None:
         return f"App not found: {key}"
@@ -106,28 +94,20 @@ def launch(key: str) -> str | None:
         traceback.print_exc()
         return f"'{key}' crashed: {sys.exc_info()[1]}"
     finally:
-        # An app may have resized the window, changed the caption,
-        # grabbed the mouse, etc. Restore the launcher's own state
-        # so the menu looks right when we get control back.
         pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("XboxOS")
         pygame.mouse.set_visible(True)
-        pygame.event.get()  # drop any stale input from the app
+        pygame.event.get()
 
     return None
 
 
-# =============================================================
-# Layout
-# =============================================================
-def build_grid(apps: list[App]) -> list[pygame.Rect]:
-    """Compute tile rects for an arbitrary number of apps, centered
-    horizontally, instead of hardcoding positions per index."""
+def build_grid(apps: list[App]) -> tuple[list[pygame.Rect], int]:
     rows = (len(apps) + GRID_COLS - 1) // GRID_COLS
     grid_w = GRID_COLS * TILE_W + (GRID_COLS - 1) * TILE_GAP_X
     start_x = (WIDTH - grid_w) // 2
 
-    rects = []
+    rects: list[pygame.Rect] = []
     for i in range(len(apps)):
         col = i % GRID_COLS
         row = i // GRID_COLS
@@ -137,23 +117,18 @@ def build_grid(apps: list[App]) -> list[pygame.Rect]:
     return rects, rows
 
 
-# =============================================================
-# Drawing
-# =============================================================
 def draw_tile(screen, font, icon_font, rect, app: App, hovered: bool, focused: bool):
     color = TILE_HOVER_COLOR if hovered else TILE_COLOR
     pygame.draw.rect(screen, color, rect, border_radius=16)
     if focused:
         pygame.draw.rect(screen, TILE_FOCUS_BORDER, rect, width=3, border_radius=16)
 
-    # icon circle
     icon_r = rect.height // 2 - 14
     icon_center = (rect.x + icon_r + 14, rect.centery)
     pygame.draw.circle(screen, BG_COLOR, icon_center, icon_r)
     icon_surf = icon_font.render(app.icon, True, TILE_TEXT_COLOR)
     screen.blit(icon_surf, icon_surf.get_rect(center=icon_center))
 
-    # label
     label_surf = font.render(app.label, True, TILE_TEXT_COLOR)
     label_x = icon_center[0] + icon_r + 18
     screen.blit(label_surf, (label_x, rect.centery - label_surf.get_height() // 2))
@@ -169,9 +144,6 @@ def draw_footer(screen, font, message: str, message_timer: int):
         screen.blit(err_surf, (WIDTH // 2 - err_surf.get_width() // 2, HEIGHT - 70))
 
 
-# =============================================================
-# Main loop
-# =============================================================
 def main():
     pygame.init()
     pygame.display.set_mode((WIDTH, HEIGHT))
@@ -202,7 +174,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
@@ -217,18 +188,15 @@ def main():
                 elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
                     status_message = launch(APP_LIST[focused_index].key) or ""
                     status_timer = FPS * 3
-
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for i, rect in enumerate(rects):
                     if rect.collidepoint(event.pos):
                         focused_index = i
                         status_message = launch(APP_LIST[i].key) or ""
                         status_timer = FPS * 3
-
-            elif event.type == pygame.JOYBUTTONDOWN and event.button == 0:  # A button
+            elif event.type == pygame.JOYBUTTONDOWN and event.button == 0:
                 status_message = launch(APP_LIST[focused_index].key) or ""
                 status_timer = FPS * 3
-
             elif event.type == pygame.JOYHATMOTION:
                 hx, hy = event.value
                 if hx == 1:
@@ -240,14 +208,10 @@ def main():
                 elif hy == 1:
                     focused_index = (focused_index - GRID_COLS) % len(APP_LIST)
 
-        # ---- draw ----
         screen.fill(BG_COLOR)
-
         title_surf = title_font.render("XboxOS", True, TITLE_COLOR)
         screen.blit(title_surf, (WIDTH // 2 - title_surf.get_width() // 2, 36))
-        subtitle_surf = subtitle_font.render(
-            "Select an app", True, SUBTITLE_COLOR
-        )
+        subtitle_surf = subtitle_font.render("Select an app", True, SUBTITLE_COLOR)
         screen.blit(subtitle_surf, (WIDTH // 2 - subtitle_surf.get_width() // 2, 100))
 
         for i, (rect, app) in enumerate(zip(rects, APP_LIST)):
