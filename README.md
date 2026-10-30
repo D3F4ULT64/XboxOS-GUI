@@ -1,21 +1,15 @@
 # XboxOS GUI
 
-A simple desktop operating system launcher made with Python and Pygame.
-
-XboxOS GUI is a beginner-friendly version of XboxOS that replaces the command-line launcher with a graphical dashboard. Click an app to launch it instantly.
-
----
+A simple desktop console-style launcher made with Python and Pygame.
 
 ## Features
 
-- 🖱️ Clickable GUI launcher
-- 🎮 Built with Python and Pygame
-- 📦 Simple app system
-- 🕹️ Built-in games
-- 💻 Easy to extend with new apps
-- 🪟 Windows executable support using PyInstaller
-
----
+- Clickable GUI launcher
+- Keyboard navigation
+- Xbox/gamepad navigation
+- Built-in apps and games
+- Windows executable build with PyInstaller
+- App loading with useful error messages
 
 ## Included Apps
 
@@ -31,65 +25,56 @@ XboxOS GUI is a beginner-friendly version of XboxOS that replaces the command-li
 - Pong
 - Racing
 
----
-
 ## Requirements
 
-- Python 3.13 or newer
+- Windows 10/11
+- Python 3.10+
 - Pygame
-- pynput (Mouse app)
+- pynput
+- PyInstaller (only needed for building)
 
-Install requirements:
+Install everything with:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
----
-
-## Running XboxOS
-
-Run with Python:
+## Running
 
 ```bash
 python main.py
 ```
 
-or
+or on Windows:
 
-```bash
-py main.py
+```text
+XboxOS.bat
 ```
-
----
 
 ## Building an EXE
 
-Run:
+Run the included build/setup wizard:
 
-```bash
-build.bat
+```text
+setup.bat
 ```
 
-or manually:
+It installs the requirements, checks PyInstaller, cleans old build output, and builds:
 
-```bash
-py -m PyInstaller --onedir --windowed --icon=assets\xboxos.ico --name XboxOS main.py
+```text
+dist\XboxOS\XboxOS.exe
 ```
 
-The executable will be created in:
+The build uses the icon that actually exists in the repository:
 
+```text
+assets\Xbox.ico
 ```
-dist\XboxOS\
-```
-
----
 
 ## Project Structure
 
-```
-XboxOS_GUI/
-│
+```text
+XboxOS-GUI/
 ├── apps/
 │   ├── games/
 │   │   ├── pong.py
@@ -98,42 +83,27 @@ XboxOS_GUI/
 │   ├── mouse.py
 │   ├── sound.py
 │   └── vibrate.py
-│
 ├── assets/
-│   └── xboxos.ico
-│
-├── build.bat
+│   ├── background.png
+│   ├── Car.png
+│   ├── EnemyCAR.png
+│   └── Xbox.ico
 ├── main.py
-├── README.md
+├── XboxOS.bat
+├── setup.bat
 ├── requirements.txt
+├── README.md
 └── LICENSE
 ```
 
----
+## Adding an App
 
-## Future Plans
-
-- Controller navigation
-- Xbox-style dashboard
-- App icons
-- Animations
-- Themes
-- Settings
-- More games
-- Better app management
-
----
+Put a Python file in `apps/` or `apps/games/` and give it a callable `run()` function. Add an `App(...)` entry to `APP_LIST` in `main.py` to make it appear in the launcher.
 
 ## License
 
-See the LICENSE file.
-
----
+See `LICENSE` for the project license.
 
 ## Author
 
-Created by **Iremide**
-
-GitHub: https://github.com/D3F4ULT64
-
-Email: d3f4ult.os@gmail.com
+Created by **Iremide**.
