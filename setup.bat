@@ -1,167 +1,114 @@
 @echo off
 title XboxOS Build Wizard
 color 0B
-setlocal EnableDelayedExpansion
+setlocal
 
 cls
 echo.
 echo ==========================================
 echo            XboxOS Build Wizard
-echo                 Version 0.1
+echo                 Version 0.2
 echo ==========================================
 echo.
-echo Welcome!
-echo.
-echo This wizard will build XboxOS into
-echo a standalone Windows executable.
+echo This wizard installs dependencies and builds XboxOS.
 echo.
 pause
-
 
 :: -------------------------------
 :: Python Check
 :: -------------------------------
-
 cls
-echo.
 echo [1/5] Checking Python...
-echo.
-
 where py >nul 2>&1
-
-if %errorlevel%==0 (
-    set PYTHON=py
-) else (
+if errorlevel 1 (
     where python >nul 2>&1
-
-    if %errorlevel%==0 (
-        set PYTHON=python
-    ) else (
+    if errorlevel 1 (
         color 0C
         echo Python was not found.
-        echo.
         echo Please install Python first.
-        echo https://www.python.org/downloads/
         pause
-        exit /b
+        exit /b 1
     )
+    set "PYTHON=python"
+) else (
+    set "PYTHON=py"
 )
+%PYTHON% --version
 
-echo Python detected!
-echo.
-pause
-
+:: -------------------------------
+:: Install Requirements
+:: -------------------------------
+cls
+echo [2/5] Installing requirements...
+if not exist requirements.txt (
+    color 0C
+    echo requirements.txt was not found.
+    pause
+    exit /b 1
+)
+%PYTHON% -m pip install -r requirements.txt
+if errorlevel 1 (
+    color 0C
+    echo Failed to install requirements.
+    pause
+    exit /b 1
+)
 
 :: -------------------------------
 :: Check PyInstaller
 :: -------------------------------
-
 cls
-echo.
-echo [2/5] Checking PyInstaller...
-echo.
-
+echo [3/5] Checking PyInstaller...
 %PYTHON% -m PyInstaller --version >nul 2>&1
-
 if errorlevel 1 (
-    echo PyInstaller not found.
-    echo.
     echo Installing PyInstaller...
-    echo.
-
     %PYTHON% -m pip install pyinstaller
-
     if errorlevel 1 (
         color 0C
-        echo.
         echo Failed to install PyInstaller.
         pause
-        exit /b
+        exit /b 1
     )
 )
-
-echo PyInstaller is ready.
-echo.
-pause
-
 
 :: -------------------------------
 :: Clean Old Builds
 :: -------------------------------
-
 cls
-echo.
-echo [3/5] Cleaning old builds...
-echo.
-
+echo [4/5] Cleaning old builds...
 if exist build rmdir /S /Q build
 if exist dist rmdir /S /Q dist
 if exist XboxOS.spec del /Q XboxOS.spec
 if exist main.spec del /Q main.spec
 
-echo Done.
-echo.
-pause
-
-
 :: -------------------------------
 :: Build XboxOS
 :: -------------------------------
-
 cls
-echo.
-echo [4/5] Building XboxOS...
-echo.
-
+echo [5/5] Building XboxOS...
 %PYTHON% -m PyInstaller ^
---onedir ^
---windowed ^
---clean ^
---name XboxOS ^
---icon=assets\xboxos.ico ^
-main.py
+ --onedir ^
+ --windowed ^
+ --clean ^
+ --name XboxOS ^
+ --icon=assets\Xbox.ico ^
+ main.py
 
 if errorlevel 1 (
     color 0C
     echo.
     echo Build failed.
     pause
-    exit /b
+    exit /b 1
 )
 
-echo.
-echo Build successful!
-echo.
-pause
-
-
-:: -------------------------------
-:: Finish
-:: -------------------------------
-
-cls
 color 0A
-
 echo.
 echo ==========================================
 echo          XboxOS Build Complete!
 echo ==========================================
 echo.
-echo Your executable has been created.
+echo Output: dist\XboxOS\XboxOS.exe
 echo.
-echo Location:
-echo.
-echo     dist\XboxOS\
-echo.
-echo Main executable:
-echo.
-echo     XboxOS.exe
-echo.
-echo You can now share the entire
-echo "dist\XboxOS" folder.
-echo.
-echo Enjoy XboxOS!
-echo.
-
 pause
-exit
+exit /b 0
